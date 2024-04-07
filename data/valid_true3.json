@@ -1,0 +1,26 @@
+{
+    "PolicyName": "",
+    "PolicyDocument": {
+        "Version": "",
+        "Statement": [
+            {
+                "Sid": "",
+                "Effect": "",
+                "Action": [
+                    "",
+                    ""
+                ],
+                "Resource": "a"
+            },
+            {
+                "Sid": "",
+                "Effect": "",
+                "Action": [
+                    "",
+                    ""
+                ],
+                "Resource": "b"
+            }
+        ]
+    }
+}
