@@ -30,12 +30,6 @@ type AWS_RP_Check struct {
 	jsonData AWS_IAM_Role
 }
 
-func errorHandle(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func isInArray(target string, array []string) bool {
 	for _, item := range array {
 		if item == target {
@@ -47,7 +41,7 @@ func isInArray(target string, array []string) bool {
 
 func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
 	// verify PolicyName
-	if 1 > len(aws.jsonData.PolicyName) || len(aws.jsonData.PolicyName) > 128 {
+	if 1 >= len(aws.jsonData.PolicyName) || len(aws.jsonData.PolicyName) >= 128 {
 		return errors.New("invalid length of PolicyName field")
 	}
 	match, _ := regexp.MatchString("[\\w+=,.@-]+", aws.jsonData.PolicyName)
@@ -77,22 +71,29 @@ func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
 	return nil
 }
 
-func (aws *AWS_RP_Check) loadFile(path string) {
+func (aws *AWS_RP_Check) loadFile(path string) error {
 	bin_data, err := os.ReadFile(path)
-	errorHandle(err)
+	if err != nil {
+		return err
+	}
 	fmt.Println(string(bin_data))
 	err = json.Unmarshal(bin_data, &aws.jsonData)
-	errorHandle(err)
+	if err != nil {
+		return err
+	}
 	err = aws.verifyAWS_IAM_RP()
-	errorHandle(err)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (aws *AWS_RP_Check) verifyResource() bool {
+func (aws *AWS_RP_Check) verifyResource() (bool, error) {
 	for _, statement := range aws.jsonData.PolicyDocument.Statement {
 		switch resource_field := statement.Resource.(type) {
 		case string:
 			if strings.Contains(resource_field, "*") {
-				return false
+				return false, nil
 			}
 		case []interface{}: // resource can be either string, or slice of strings (as documentation says)
 			for _, resource := range resource_field {
@@ -100,15 +101,15 @@ func (aws *AWS_RP_Check) verifyResource() bool {
 				resource, ok := resource.(string)
 				if ok {
 					if strings.Contains(resource, "*") {
-						return false
+						return false, nil
 					}
 				} else {
-					panic(errors.New("invalid resource field type"))
+					return true, errors.New("invalid resource field type")
 				}
 			}
 		default:
-			panic(errors.New("invalid resource field type"))
+			return true, errors.New("invalid resource field type")
 		}
 	}
-	return true
+	return true, nil
 }
