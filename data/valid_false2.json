@@ -1,14 +1,14 @@
 {
-    "PolicyName": "",
+    "PolicyName": "root",
     "PolicyDocument": {
-        "Version": "",
+        "Version": "2012-10-17",
         "Statement": [
             {
-                "Sid": "",
-                "Effect": "",
+                "Sid": "IamListAccess",
+                "Effect": "Allow",
                 "Action": [
-                    "",
-                    ""
+                    "iam:ListRoles",
+                    "iam:ListUsers"
                 ],
                 "Resource": "*  *"
             }
