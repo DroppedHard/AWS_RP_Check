@@ -41,8 +41,8 @@ func isInArray(target string, array []string) bool {
 
 func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
 	// verify PolicyName
-	if 1 >= len(aws.jsonData.PolicyName) || len(aws.jsonData.PolicyName) >= 128 {
-		return errors.New("invalid length of PolicyName field")
+	if 1 > len(aws.jsonData.PolicyName) || len(aws.jsonData.PolicyName) > 128 {
+		return errors.New("invalid length of PolicyName field, or not defined")
 	}
 	match, _ := regexp.MatchString("[\\w+=,.@-]+", aws.jsonData.PolicyName)
 	if !match {
@@ -53,6 +53,9 @@ func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
 		return errors.New("invalid PolicyDocument Version")
 	}
 	// verify PolicyDocument.Statement
+	if len(aws.jsonData.PolicyDocument.Statement) == 0 {
+		return errors.New("undefined Statements")
+	}
 	for _, statement := range aws.jsonData.PolicyDocument.Statement {
 		// verify Effect
 		if !isInArray(statement.Effect, []string{"Allow", "Deny"}) {
