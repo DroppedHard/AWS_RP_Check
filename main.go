@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 func errorHandle(err error) {
@@ -12,12 +13,18 @@ func errorHandle(err error) {
 
 func main() {
 	var (
-		aws AwsRolePolicyChecker
-		err error
-		out bool
+		aws  AwsRolePolicyChecker
+		err  error
+		out  bool
+		path string
 	)
 
-	path := "./source.json"
+	if len(os.Args) > 1 && os.Args[1] != "" {
+		path = os.Args[1]
+	} else {
+		path = "./source.json"
+	}
+	fmt.Println(path)
 	err = aws.loadFile(path)
 	errorHandle(err)
 

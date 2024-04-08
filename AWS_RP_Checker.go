@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -77,6 +78,7 @@ func (aws *AwsRolePolicyChecker) loadFile(path string) (err error) {
 	if err != nil {
 		return
 	}
+	fmt.Println(string(bin_data))
 	if err = json.Unmarshal(bin_data, &aws.JsonData); err != nil {
 		return
 	}

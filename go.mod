@@ -1,3 +1,3 @@
-module AWS_RolePolicy/Resource
+module AWS_RolePolicy/ResourceChecker
 
 go 1.22.1
