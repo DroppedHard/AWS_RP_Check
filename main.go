@@ -24,7 +24,6 @@ func main() {
 	} else {
 		path = "./source.json"
 	}
-	fmt.Println(path)
 	err = aws.loadFile(path)
 	errorHandle(err)
 
