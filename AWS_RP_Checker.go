@@ -3,31 +3,30 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
 )
 
-type AWS_IAM_Statement struct { // SID field is optional
+type AwsIamStatement struct { // SID field is optional
 	Effect    string      `json:"Effect"`    // required https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_effect.html
 	Action    interface{} `json:"Action"`    // contains string or []string
 	NotAction interface{} `json:"NotAction"` // contains string or []string
 	Resource  interface{} `json:"Resource"`  // contains string or []string
 }
 
-type AWS_IAM_PolicyDocument struct {
-	Version   string              `json:"Version"` // required https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html
-	Statement []AWS_IAM_Statement `json:"Statement"`
+type AwsIamPolicyDocument struct {
+	Version   string            `json:"Version"` // required https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html
+	Statement []AwsIamStatement `json:"Statement"`
 }
 
-type AWS_IAM_Role struct {
-	PolicyDocument AWS_IAM_PolicyDocument `json:"PolicyDocument"`
-	PolicyName     string                 `json:"PolicyName"`
+type AwsIamRolePolicy struct {
+	PolicyDocument AwsIamPolicyDocument `json:"PolicyDocument"`
+	PolicyName     string               `json:"PolicyName"`
 }
 
-type AWS_RP_Check struct {
-	jsonData AWS_IAM_Role
+type AwsRolePolicyChecker struct {
+	JsonData AwsIamRolePolicy
 }
 
 func isInArray(target string, array []string) bool {
@@ -39,24 +38,23 @@ func isInArray(target string, array []string) bool {
 	return false
 }
 
-func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
+func (aws *AwsRolePolicyChecker) verifyAwsIamRolePolicyFormat() error {
 	// verify PolicyName
-	if 1 > len(aws.jsonData.PolicyName) || len(aws.jsonData.PolicyName) > 128 {
+	if 1 > len(aws.JsonData.PolicyName) || len(aws.JsonData.PolicyName) > 128 {
 		return errors.New("invalid length of PolicyName field, or not defined")
 	}
-	match, _ := regexp.MatchString("[\\w+=,.@-]+", aws.jsonData.PolicyName)
-	if !match {
+	if match, _ := regexp.MatchString("[\\w+=,.@-]+", aws.JsonData.PolicyName); !match {
 		return errors.New("PolicyName field does not match RegEx pattern")
 	}
 	// verify PolicyDocument.Version
-	if !isInArray(aws.jsonData.PolicyDocument.Version, []string{"2012-10-17", "2008-10-17"}) {
+	if !isInArray(aws.JsonData.PolicyDocument.Version, []string{"2012-10-17", "2008-10-17"}) {
 		return errors.New("invalid PolicyDocument Version")
 	}
 	// verify PolicyDocument.Statement
-	if len(aws.jsonData.PolicyDocument.Statement) == 0 {
+	if len(aws.JsonData.PolicyDocument.Statement) == 0 {
 		return errors.New("undefined Statements")
 	}
-	for _, statement := range aws.jsonData.PolicyDocument.Statement {
+	for _, statement := range aws.JsonData.PolicyDocument.Statement {
 		// verify Effect
 		if !isInArray(statement.Effect, []string{"Allow", "Deny"}) {
 			return errors.New("invalid Effect in Statements")
@@ -74,35 +72,30 @@ func (aws *AWS_RP_Check) verifyAWS_IAM_RP() error {
 	return nil
 }
 
-func (aws *AWS_RP_Check) loadFile(path string) error {
+func (aws *AwsRolePolicyChecker) loadFile(path string) (err error) {
 	bin_data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return
 	}
-	fmt.Println(string(bin_data))
-	err = json.Unmarshal(bin_data, &aws.jsonData)
-	if err != nil {
-		return err
+	if err = json.Unmarshal(bin_data, &aws.JsonData); err != nil {
+		return
 	}
-	err = aws.verifyAWS_IAM_RP()
-	if err != nil {
-		return err
+	if err = aws.verifyAwsIamRolePolicyFormat(); err != nil {
+		return
 	}
 	return nil
 }
 
-func (aws *AWS_RP_Check) verifyResource() (bool, error) {
-	for _, statement := range aws.jsonData.PolicyDocument.Statement {
+func (aws *AwsRolePolicyChecker) verifyResource() (bool, error) {
+	for _, statement := range aws.JsonData.PolicyDocument.Statement {
 		switch resource_field := statement.Resource.(type) {
 		case string:
 			if strings.Contains(resource_field, "*") {
 				return false, nil
 			}
-		case []interface{}: // resource can be either string, or slice of strings (as documentation says)
+		case []interface{}:
 			for _, resource := range resource_field {
-				// using type assertions
-				resource, ok := resource.(string)
-				if ok {
+				if resource, ok := resource.(string); ok {
 					if strings.Contains(resource, "*") {
 						return false, nil
 					}

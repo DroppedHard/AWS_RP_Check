@@ -12,7 +12,7 @@ var true_path = "./data/true/"
 
 func helperInvalid(t *testing.T, file string, expectedError string, failText string) {
 	// given
-	var aws AWS_RP_Check
+	var aws AwsRolePolicyChecker
 	// when
 	err := aws.loadFile(invalid_path + file)
 	// then
@@ -25,7 +25,7 @@ func helperInvalid(t *testing.T, file string, expectedError string, failText str
 
 func helperValid(t *testing.T, path string, expectedOut bool) {
 	// given
-	var aws AWS_RP_Check
+	var aws AwsRolePolicyChecker
 	// when
 	err := aws.loadFile(path)
 	if err != nil {

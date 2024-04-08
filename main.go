@@ -11,12 +11,18 @@ func errorHandle(err error) {
 }
 
 func main() {
-	var aws AWS_RP_Check
-	path := "./data/false/1stat_1res_1.json"
-	err := aws.loadFile(path)
-	fmt.Printf("err: %T\n", err)
+	var (
+		aws AwsRolePolicyChecker
+		err error
+		out bool
+	)
+
+	path := "./source.json"
+	err = aws.loadFile(path)
 	errorHandle(err)
-	out, err2 := aws.verifyResource()
-	errorHandle(err2)
+
+	out, err = aws.verifyResource()
+	errorHandle(err)
+
 	fmt.Println("Outcome: ", out)
 }
